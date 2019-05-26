@@ -7,4 +7,5 @@
  * Time: 11:41
  */
 $pdo = new PDO('mysql:host=localhost;dbname=restful','root','');
+$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
 return $pdo;

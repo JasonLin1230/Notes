@@ -5,7 +5,7 @@
  * Date: 2019/5/26
  * Time: 11:41
  */
-require __DIR__.'/ErrorCode.php';
+require_once __DIR__.'/ErrorCode.php';
 class User{
     /**
      * 数据库连接句柄
