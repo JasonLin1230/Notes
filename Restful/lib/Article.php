@@ -27,15 +27,15 @@ class Article{
     public function  create($title,$content,$userId){
         if (empty($title))
         {
-            throw new Exception('标题不能为空');
+            throw new MyHttpException(422, '标题不能为空');
         }
         if (empty($content))
         {
-            throw new Exception('内容不能为空');
+            throw new MyHttpException(422, '内容不能为空');
         }
         if (empty($userId))
         {
-            throw new Exception('用户ID不能为空');
+            throw new MyHttpException(422, '用户ID不能为空');
         }
         $sql = 'INSERT INTO `article` (`title`,`createdAt`,`content`,`userId`) VALUES (:title,:createdAt,:content,:userId)';
         $createdAt = time();
@@ -46,7 +46,7 @@ class Article{
         $stmt->bindParam(':createdAt', $createdAt);
         if (!$stmt->execute())
         {
-            throw new Exception('发表失败');
+            throw new MyHttpException(500, '发表失败');
         }
         return [
             'articleId' => $this->_db->lastInsertId(),
@@ -63,9 +63,6 @@ class Article{
      * @throws Exception
      */
     public function view($articleId){
-        if(empty($articleId)){
-            throw new Exception('文章ID不能为空');
-        }
         $sql = 'SELECT * FROM `article` WHERE `articleId`=:id';
         $stmt = $this->_db->prepare($sql);
         $stmt->bindParam(':id', $articleId, PDO::PARAM_INT);
@@ -73,7 +70,7 @@ class Article{
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
         if (empty($data))
         {
-            throw new Exception('文章不存在');
+            throw new MyHttpException(404, '文章不存在');
         }
         return $data;
     }
@@ -91,7 +88,7 @@ class Article{
         $article = $this->view($articleId);
         if ($article['userId'] != $userId)
         {
-            throw new Exception('你没有权限修改该文章');
+            throw new MyHttpException(403, '你没有权限修改该文章');
         }
         $sql = 'UPDATE `article` SET `title`=:title,`content`=:content WHERE articleId=:id';
         $stmt = $this->_db->prepare($sql);
@@ -102,7 +99,7 @@ class Article{
         $stmt->bindParam(':id', $articleId);
         if (!$stmt->execute())
         {
-            throw new Exception('编辑失败');
+            throw new MyHttpException(500, '编辑失败');
         }
         return [
             'articleId' => $articleId,
@@ -123,7 +120,7 @@ class Article{
         $article = $this->view($articleId);
         if ($article['userId'] != $userId)
         {
-            throw new Exception('您无权操作');
+            throw new MyHttpException(404, '文章不存在');
         }
         $sql = 'DELETE FROM `article` WHERE `articleId`=:articleId AND `userId`=:userId';
         $stmt = $this->_db->prepare($sql);
@@ -131,7 +128,7 @@ class Article{
         $stmt->bindParam(':userId', $userId);
         if (!$stmt->execute())
         {
-            throw new Exception('删除失败');
+            throw new MyHttpException(500, '删除失败');
         }
     }
 

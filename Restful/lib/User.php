@@ -12,30 +12,34 @@ class User{
      * @var
      */
     private $_db;
+    private $salt = 'imooc';
     public  function  __construct($_db){
         $this->_db = $_db;
     }
+
     /**
      * 用户登录
      * @param $username
      * @param $password
+     * @return
+     * @throws MyHttpException
      */
     public function  login($username,$password){
         if(empty($username)){
-            throw new Exception('用户名不能为空',ErrorCode::USERNAME_EMPTY);
+            throw new MyHttpException(422, '用户名不能为空');
         }
         if(empty($password)){
-            throw new Exception('密码不能为空',ErrorCode::PASSWORD_EMPTY);
+            throw new MyHttpException(422, '密码不能为空');
         }
         $sql = 'SELECT * FROM `user` WHERE `username`=:username AND `password`=:password';
-        $password = $this->_md5($password);
+        $password = $this->_md5($password . $this->salt);
         $stmt = $this->_db->prepare($sql);
         $stmt->bindParam(':username', $username);
         $stmt->bindParam(':password', $password);
         $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         if(empty($user)){
-            throw new Exception('用户名或密码错误',ErrorCode::USERNAME_OR_PASSWORD_INVALID);
+            throw new MyHttpException(422, '用户名或密码错误');
         }
         unset($user['password']);
         return $user;
@@ -49,27 +53,39 @@ class User{
      * @return array
      */
     public function  register($username,$password){
-        if(empty($username)){
-            throw new Exception('用户名不能为空',ErrorCode::USERNAME_EMPTY);
+        $username = trim($username);
+        if (empty($username))
+        {
+            throw new MyHttpException(422, '用户名不能为空');
         }
-        if(empty($password)){
-            throw new Exception('密码不能为空',ErrorCode::PASSWORD_EMPTY);
+        $password = trim($password);
+        if (empty($password))
+        {
+            throw new MyHttpException(422, '密码不能为空');
         }
-        if($this->isUsernameExists($username)){
-            throw new Exception('当前用户名已存在',ErrorCode::USERNAME_EXISTS);
+        //检测是否存在该用户
+        if ($this->isUsernameExists($username))
+        {
+            throw new MyHttpException(422, '用户名已存在');
         }
-        $sql = 'INSERT INTO `user`(`username`,`password`,`createdAt`) VALUES (:username,:password,:createdAt)';
+        $password = _md5($password . $this->salt);
         $createdAt = time();
-        $password = $this->_md5($password);
+        if ($this->_db === null)
+        {
+            throw new MyHttpException(500, '数据库连接失败');
+        }
+        $sql = 'INSERT INTO `user`(`username`,`password`,`createdAt`) VALUES(:username,:password,:createdAt)';
         $stmt = $this->_db->prepare($sql);
         $stmt->bindParam(':username', $username);
         $stmt->bindParam(':password', $password);
         $stmt->bindParam(':createdAt', $createdAt);
-        if(!$stmt->execute()){
-            throw new Exception('注册失败',ErrorCode::REGISTER_FAIL);
+        if (!$stmt->execute())
+        {
+            throw new MyHttpException(500, '注册失败');
         }
-        return[
-            'userId' => $this->_db->lastInsertId(),
+        $userId = $this->_db->lastInsertId();
+        return [
+            'userId' => $userId,
             'username' => $username,
             'createdAt' => $createdAt
         ];
@@ -81,7 +97,7 @@ class User{
      * @param string $key
      * @return string
      */
-    private function _md5($string,$key = 'imooc'){
+    private function _md5($string,$key){
         return md5($string . $key);
     }
 
@@ -91,6 +107,10 @@ class User{
      * @return bool
      */
     private function isUsernameExists($username){
+        if ($this->_db === null)
+        {
+            throw new MyHttpException(500, '数据库连接失败');
+        }
         $sql = 'SELECT * FROM `user` WHERE `username`=:username';
         $stmt = $this->_db->prepare($sql);
         $stmt->bindParam(':username',$username);
