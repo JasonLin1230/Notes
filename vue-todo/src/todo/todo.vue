@@ -4,16 +4,11 @@
       type="text"
       class="add-input"
       autofocus="autofocus"
-      placeholder="接下去要做什么?"
-      @keyup.enter="addTodo"
+      placeholder="接下来要做什么？"
+      @keyup="addTodo"
     >
-    <Item :todo="todo" v-for="todo in filteredTodos" :key="todo.id" @del="deleteTodo"/>
-    <Tabs
-      :filter="filter"
-      :todos="todos"
-      @togole="togoleFilter"
-      @clearAllCompleted="clearAllCompleted"
-    ></Tabs>
+    <Item :todo="todo"></Item>
+    <Tabs :filter="filter"></Tabs>
   </section>
 </template>
 
@@ -25,7 +20,11 @@ let id = 0;
 export default {
   data() {
     return {
-      todos: [],
+      todo: {
+        id: 0,
+        content: "this is todo",
+        iscompleted: false
+      },
       filter: "all"
     };
   },
@@ -33,33 +32,8 @@ export default {
     Item,
     Tabs
   },
-  computed: {
-    filteredTodos() {
-      if (this.filter === "all") {
-        return this.todos;
-      }
-      const completed = this.filter === "completed";
-      return this.todos.filter(todo => completed === todo.completed);
-    }
-  },
   methods: {
-    addTodo(e) {
-      this.todos.unshift({
-        id: id++,
-        content: e.target.value.trim(),
-        completed: false
-      });
-      e.target.value = "";
-    },
-    deleteTodo(id) {
-      this.todos.splice(this.todos.findIndex(todo => todo.id == id), 1);
-    },
-    togoleFilter(state) {
-      this.filter = state;
-    },
-    clearAllCompleted() {
-      this.todos = this.todos.filter(todo => !todo.completed);
-    }
+    addTodo() {}
   }
 };
 </script>
