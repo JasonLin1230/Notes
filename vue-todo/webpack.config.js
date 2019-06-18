@@ -77,6 +77,12 @@ if (isDev) {
   );
 } else {
   // 生产环境
+  // 类库文件与业务逻辑文件分离
+  config.entry = {
+    app: path.join(__dirname, "src/index.js"),
+    vendor: ["vue"]
+  };
+  // js文件名chunkhash
   config.output.filename = "[name].[chunkhash:8].js";
   // css单独抽离
   config.module.rules.push({
@@ -95,7 +101,17 @@ if (isDev) {
       ]
     })
   });
-  config.plugins.push(new ExtractPlugin("styles.[contentHash:8].css"));
+  config.plugins.push(
+    new ExtractPlugin("styles.[contentHash:8].css"),
+    // 类库代码抽离
+    new webpack.optimize.CommonsChunkPlugin({
+      name: "vendor"
+    }),
+    // webpack配置抽离
+    new webpack.optimize.CommonsChunkPlugin({
+      name: "runtime"
+    })
+  );
 }
 
 module.exports = config;
