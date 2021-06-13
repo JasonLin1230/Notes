@@ -1,0 +1,20 @@
+<mapper namespace="com.iamu.dao.UserDao">
+    <!--  sql的唯一标识：namespace.id来组成：statementId  -->
+
+    <select id="selectAll" resultType="com.iamu.pojo.User">
+        select * from user
+    </select>
+
+    <!--
+        User user = new User()
+        user.setId(1);
+        user.setUsername("zhangsan");
+      -->
+    <select id="selectOne" resultType="com.iamu.pojo.User" parameterType="com.iamu.pojo.User">
+        select * from user where id = #{id} and username = #{username}
+    </select>
+
+    <select id="findByCondition" resultType="com.iamu.pojo.User" parameterType="com.iamu.pojo.User">
+        select * from user where id = #{id} and username = #{username}
+    </select>
+</mapper>
